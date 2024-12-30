@@ -6,9 +6,15 @@ It incorporates modern web design principles, ensures seamless interaction, and 
 CropSense is a step toward smarter farming through data-driven decision-making.
 
 **Features:**
+
 Soil quality classification and erosion risk assessment.
+
 Real-time analysis of soil nutrients and moisture levels.
+
 Customized recommendations for improving soil health.
+
 Responsive web interface built with HTML, CSS, and JavaScript.
+
 Backend powered by Flask for efficient data processing.
+
 Expandable with APIs for market and farming insights.
