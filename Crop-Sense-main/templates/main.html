@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"   >
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+  />
 </head>
 <body>
     <div class="container">
@@ -18,6 +21,9 @@
         </form>
         <form action="/fertilizer_recommendation" method="GET">
             <button type="submit">Fertilizer Recommendation</button>
+        </form>
+        <form action="/sampling" method="GET">
+            <button type="submit">Field Sampling</button>
         </form>
     </div>
 </body>

@@ -4,9 +4,13 @@ import pandas as pd
 import pickle
 
 # importing model
-model = pickle.load(open(r'./random_forest_model.pkl', 'rb'))
-sc = pickle.load(open(r'./standscaler.pkl', 'rb'))
-ms = pickle.load(open(r'./minmaxscaler.pkl', 'rb'))
+model = pickle.load(open('./random_forest_model.pkl', 'rb'))
+sc = pickle.load(open('./standscaler.pkl', 'rb'))
+ms = pickle.load(open('./minmaxscaler.pkl', 'rb'))
+model2 = pickle.load(open('./recommendation_model.pkl', 'rb'))
+lbl_enc = pickle.load(open('./crop_label_encoder.pkl', 'rb'))
+fert_lbl_enc = pickle.load(open('./fertilizer_label_encoder.pkl', 'rb'))
+
 
 # creating flask app
 app = Flask(__name__)
@@ -19,7 +23,7 @@ def crop_recommendation():
     return render_template("index.html")
 
 # Route for predicting crop recommendations
-@app.route("/predict_crop", methods=['POST'])
+@app.route("/predict", methods=['POST'])
 def predict_crop():
     N = float(request.form['Nitrogen'])
     P = float(request.form['Phosporus'])
@@ -117,10 +121,121 @@ def fertilizer_recommendation():
     return render_template("fert_index.html")
 
 # Route for predicting fertilizer recommendations
-@app.route("/predict_fertilizer", methods=['POST'])
+@app.route('/predict_fertilizer', methods=['POST'])
 def predict_fertilizer():
-    # Logic for fertilizer recommendation goes here
-    return render_template("fert_result.html", recommendation="Urea and Potash recommended!")  # Example
+    
+        # Get input values from the form
+        nitrogen = float(request.form['Nitrogen'])
+        phosphorus = float(request.form['Phosporus'])
+        potassium = float(request.form['Potassium'])
+        crop = request.form['Crop'].strip()
+
+        # Encode the crop
+        crop_encoded = lbl_enc.transform([crop])[0]
+
+        # Prepare input for the model
+        input_features = np.array([[nitrogen, phosphorus, potassium, crop_encoded]])
+
+        # Predict fertilizer
+        fertilizer_index = model2.predict(input_features)[0]
+        fertilizer_name = fert_lbl_enc.inverse_transform([fertilizer_index])[0]
+        
+             
+    
+    
+        result = {
+        1: "Urea",
+        2: "DAP",
+        3: "MOP",
+        4: "10:26:26 NPK",
+        5: "SSP",
+        6: "Magnesium Sulphate",
+        7: "13:32:26 NPK",
+        8: "12:32:16 NPK",
+        9: "50:26:26 NPK",
+        10: "19:19:19 NPK",
+        11: "Chilated Micronutrient",
+        12: "18:46:00 NPK",
+        13: "Sulphur",
+        14: "20:20:20 NPK",
+        15: "Ammonium Sulphate",
+        16: "Ferrous Sulphate",
+        17: "White Potash",
+        18: "10:10:10 NPK",
+        19: "Hydrated Lime"
+    }
+    
+        description = {
+    "Urea": "Urea is a highly concentrated nitrogen fertilizer, widely used for promoting rapid vegetative growth in plants. It is cost-effective and works well in a variety of soils.",
+    "DAP": "Diammonium Phosphate (DAP) is a popular phosphorus fertilizer that also supplies nitrogen, essential for early plant growth and root development.",
+    "MOP": "Muriate of Potash (MOP) is a potassium-rich fertilizer, improving overall plant health, drought resistance, and crop quality.",
+    "10:26:26 NPK": "This NPK blend provides a balanced supply of nitrogen, phosphorus, and potassium, ideal for boosting root and flower development.",
+    "SSP": "Single Super Phosphate (SSP) is a phosphorus fertilizer that also contains sulfur, improving root strength and overall growth.",
+    "Magnesium Sulphate": "Magnesium Sulphate supplies magnesium and sulfur, enhancing chlorophyll production and overall plant vigor.",
+    "13:32:26 NPK": "This NPK ratio offers high phosphorus content, suitable for flowering and fruiting stages of crop development.",
+    "12:32:16 NPK": "An NPK fertilizer with a focus on phosphorus for root development and nitrogen for early plant growth.",
+    "50:26:26 NPK": "This fertilizer provides a high nitrogen ratio, supporting leafy growth while maintaining balanced phosphorus and potassium levels.",
+    "19:19:19 NPK": "A balanced NPK fertilizer, ideal for all stages of plant growth, providing equal nitrogen, phosphorus, and potassium.",
+    "Chilated Micronutrient": "Chelated micronutrients ensure optimal absorption of essential trace elements like iron, zinc, and manganese for plant health.",
+    "18:46:00 NPK": "This fertilizer is rich in phosphorus and nitrogen, supporting early-stage crop growth and root development.",
+    "Sulphur": "Sulphur improves protein synthesis and nutrient uptake in plants, crucial for oilseed crops and legumes.",
+    "20:20:20 NPK": "A perfectly balanced NPK fertilizer for general-purpose use, supporting plant growth, flowering, and fruiting.",
+    "Ammonium Sulphate": "Ammonium Sulphate is a nitrogen fertilizer with sulfur, suitable for acid-loving crops and improving soil pH.",
+    "Ferrous Sulphate": "Ferrous Sulphate supplies iron and sulfur, preventing iron chlorosis and promoting healthy green foliage.",
+    "White Potash": "White Potash is a potassium-rich fertilizer that improves stress tolerance and enhances fruit quality.",
+    "10:10:10 NPK": "A balanced fertilizer providing equal parts nitrogen, phosphorus, and potassium, suitable for general-purpose gardening.",
+    "Hydrated Lime": "Hydrated Lime is used to adjust soil pH, reduce acidity, and enhance calcium availability for plants."
+}
+        return render_template(
+            'fert_result.html',  # Render your custom HTML
+            result=f'{fertilizer_name}' ,
+            description=description[fertilizer_name]
+            
+            # Pass the result
+        )
+    
+
+@app.route('/sampling', methods=['GET'])
+def sampling():
+    return render_template("sampling.html")
+
+@app.route('/process_sampling', methods=['POST'])
+def process_sampling():
+    field_size = float(request.form['field_size'])
+    temperature = float(request.form[f'Temperature'])
+    interval = field_size / 10
+    
+    samples = []
+    total_nitrogen = 0    
+    total_phosphorus = 0
+    total_potassium = 0
+    total_temperature = 0
+
+    for i in range(10):
+        nitrogen = float(request.form[f'Nitrogen_{i}'])
+        phosphorus = float(request.form[f'Phosporus_{i}'])
+        potassium = float(request.form[f'Potassium_{i}'])
+        
+
+        sample = {
+            'Nitrogen': nitrogen,
+            'Phosporus': phosphorus,
+            'Potassium': potassium,
+            'Temperature': temperature
+        }
+        samples.append(sample)
+
+        total_nitrogen += nitrogen
+        total_phosphorus += phosphorus
+        total_potassium += potassium
+        total_temperature += temperature
+
+    avg_nitrogen = total_nitrogen / 10
+    avg_phosphorus = total_phosphorus / 10
+    avg_potassium = total_potassium / 10
+    avg_temperature = total_temperature / 10
+
+    return render_template('sampling_result.html', interval=interval, avg_nitrogen=avg_nitrogen, avg_phosphorus=avg_phosphorus, avg_potassium=avg_potassium, avg_temperature=avg_temperature)
 
 if __name__ == "__main__":
     app.run(debug=True)
